@@ -1,0 +1,275 @@
+---
+title: "Marketing Campaign Data Analysis"
+author: "Abdallah chidjou"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output: pdf_document
+---
+
+
+```{r}
+# Abdallah Chidjou
+# Citation: (source of help: Lecture note, googling in general, stackoverflow, and chatgpt)
+```
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+In this analysis, we explore a dataset containing information from a marketing campaign. The dataset includes customer demographics, purchasing behavior, and responses to multiple campaigns. I aim to derive insights into customer characteristics and patterns that affect marketing success. 
+
+- Describe the dataset and its variables.
+- Perform statistical analyses and visualizations to understand key characteristics.
+- Explore relationships between variables, focusing on purchasing behavior and campaign responses.
+
+The dataset used includes the following variables:
+
+- ID: Customer ID
+- Year_Birth: Year of birth
+- Education: Level of education
+- Marital_Status: Marital status
+- Income: Annual income
+- Kidhome: Number of kids in the household
+- Teenhome: Number of teenagers in the household
+- Dt_Customer: Date when the customer became enrolled
+- Recency: Days since last purchase
+- MntWines, MntFruits, MntMeatProducts, MntFishProducts, MntSweetProducts, MntGoldProds: Money spent   on various product categories
+- NumDealsPurchases, NumWebPurchases, NumCatalogPurchases, NumStorePurchases, NumWebVisitsMonth: Information about different purchasing channels and deals used
+- AcceptedCmpX: Indicates whether the customer accepted a particular campaign (Cmp1, Cmp2, etc.)
+- Complain: Whether the customer has complained in the past
+- Z_CostContact: Fixed cost related to contact (likely constant)
+- Z_Revenue: Revenue generated
+- Response: Response to the most recent campaign
+- (and others...; the folowing code illustrate the rest)
+
+
+# Data Loading and Preparation
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(lubridate)
+```
+
+
+
+```{r}
+# Load the dataset
+marketing_data <- read.csv("marketing_campaign.csv", sep = "\t")
+
+# Display the first few rows of the dataset
+head(marketing_data)
+
+# Data Cleaning
+
+# Remove duplicates
+marketing_data <- marketing_data %>% distinct()
+
+# Visualize duplicates removal
+cat("Number of rows after removing duplicates: ", nrow(marketing_data), "\n")
+
+# Handling missing values - removing rows with NA values in the columns
+marketing_data <- marketing_data %>% drop_na()
+
+
+# Check for missing values in the dataset
+missing_values <- is.na(marketing_data)
+
+# Get a summary of missing values for each column
+colSums(is.na(marketing_data))
+
+# Convert date columns to appropriate format
+marketing_data$Dt_Customer <- dmy(marketing_data$Dt_Customer)
+
+# Check date conversion
+cat("Data type of Dt_Customer after conversion: ", class(marketing_data$Dt_Customer), "\n")
+
+# Remove unrealistic ages (e.g., customers older than 100 years)
+marketing_data <- marketing_data %>% filter(2024 - Year_Birth <= 100)
+
+# Visualize age filtering
+ggplot(marketing_data, aes(x = 2024 - Year_Birth)) +
+  geom_histogram(binwidth = 5, fill = "blue", color = "black") +
+  theme_minimal() +
+  labs(title = "Age Distribution After Removing Unrealistic Ages", x = "Age", y = "Count")
+
+```
+
+
+
+```{r}
+# Convert the dataset from wide to long format so that we can easily boxplot all numerical columns
+long_data <- marketing_data %>% 
+  pivot_longer(cols = where(is.numeric), names_to = "Variable", values_to = "Value")
+
+# Create boxplot for all numerical columns
+ggplot(long_data, aes(x = Variable, y = Value)) +
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Boxplots of Numerical Columns", x = "Variables", y = "Values")
+
+```
+
+
+
+```{r}
+
+# Handling outliers in Income by capping extreme values
+income_quantiles <- quantile(marketing_data$Income, probs = c(0.01, 0.99))
+marketing_data <- marketing_data %>% mutate(Income = ifelse(Income < income_quantiles[1], income_quantiles[1],
+                                                            ifelse(Income > income_quantiles[2], income_quantiles[2], Income)))
+
+# Visualize income outliers capping
+ggplot(marketing_data, aes(x = Income)) +
+  geom_histogram(binwidth = 5000, fill = "orange", color = "black") +
+  theme_minimal() +
+  labs(title = "Income Distribution After Handling Outliers", x = "Income", y = "Count")
+
+```
+
+
+
+
+```{r}
+# Profit Calculation
+# Assuming profit is derived from multiple categories of products
+marketing_data <- marketing_data %>%
+  mutate(Profit = MntWines * 0.3 + MntFruits * 0.2 + MntMeatProducts * 0.4 +
+           MntFishProducts * 0.25 + MntSweetProducts * 0.15 + MntGoldProds * 0.35)
+
+# Visualize profit distribution
+ggplot(marketing_data, aes(x = Profit)) +
+  geom_histogram(binwidth = 100, fill = "purple", color = "black") +
+  theme_minimal() +
+  labs(title = "Distribution of Customer Profit", x = "Profit", y = "Count")
+
+```
+
+# Data Exploration
+
+## Descriptive Statistics
+
+```{r descriptive-stats}
+# Summary statistics for numeric variables
+summary(marketing_data)
+```
+
+
+## Customer Demographics
+
+We analyze customer demographics such as marital status and education level.
+
+```{r marital-status}
+# Bar plot for marital status
+ggplot(marketing_data, aes(x = Marital_Status)) +
+  geom_bar(fill = "green", color = "black") +
+  theme_minimal() +
+  labs(title = "Marital Status of Customers", x = "Marital Status", y = "Count")
+```
+
+# Data Engineering and Visualization
+
+## Feature Engineering
+
+- **Customer Tenure**: Calculate the number of days since the customer joined.
+
+```{r feature-engineering}
+marketing_data$Customer_Tenure <- as.numeric(difftime(Sys.Date(), marketing_data$Dt_Customer, units = "days"))
+
+```
+
+## Visualizations
+
+- **Income Distribution**
+
+```{r income-distribution}
+ggplot(marketing_data, aes(x = Income)) +
+  geom_histogram(binwidth = 5000, fill = "orange", color = "black") +
+  theme_minimal() +
+  labs(title = "Income Distribution of Customers", x = "Income", y = "Count")
+```
+
+- **Tenure Analysis**
+
+```{r tenure-analysis}
+ggplot(marketing_data, aes(x = Customer_Tenure)) +
+  geom_histogram(binwidth = 100, fill = "cyan", color = "black") +
+  theme_minimal() +
+  labs(title = "Customer Tenure Distribution", x = "Days Since Joining", y = "Count")
+```
+
+# Data Analysis
+
+## Spending Patterns
+
+In this section, we investigate how customers spend across different product categories.
+
+```{r spending-patterns}
+# Spending on wine
+ggplot(marketing_data, aes(x = MntWines)) +
+  geom_histogram(binwidth = 50, fill = "purple", color = "black") +
+  theme_minimal() +
+  labs(title = "Distribution of Spending on Wine", x = "Amount Spent on Wine", y = "Count")
+```
+
+## Campaign Response Analysis
+
+We now explore factors affecting responses to the most recent campaign.
+
+```{r campaign-response}
+# Response rates by income
+ggplot(marketing_data, aes(x = Income, fill = factor(Response))) +
+  geom_histogram(binwidth = 5000, position = "dodge", color = "black") +
+  theme_minimal() +
+  labs(title = "Campaign Response by Income", x = "Income", y = "Count", fill = "Response")
+```
+
+## Correlation Analysis: Income vs Profit
+
+In this section, we explore the relationship between customer income and profit.
+
+```{r income-profit-correlation}
+# Scatter plot to visualize correlation between Income and Profit
+ggplot(marketing_data, aes(x = Income, y = Profit)) +
+  geom_point(alpha = 0.6, color = "blue") +
+  theme_minimal() +
+  labs(title = "Correlation between Income and Profit", x = "Income", y = "Profit")
+
+# Calculate the correlation coefficient between Income and Profit
+correlation <- cor(marketing_data$Income, marketing_data$Profit, use = "complete.obs")
+cat("Correlation between Income and Profit: ", correlation, "\n")
+```
+
+
+## Income vs Profit Segmented by Marital Status
+
+We further explore how the relationship between income and profit varies based on marital status.
+
+```{r income-profit-marital-status}
+# Scatter plot of Income vs Profit segmented by Marital Status
+ggplot(marketing_data, aes(x = Income, y = Profit, color = Marital_Status)) +
+  geom_point(alpha = 0.6) +
+  theme_minimal() +
+  labs(title = "Income vs Profit by Marital Status", x = "Income", y = "Profit", color = "Marital Status")
+
+# Correlation coefficients by marital status, excluding groups with zero variance
+correlation_by_status <- marketing_data %>%
+  group_by(Marital_Status) %>%
+  filter(sd(Income) > 0 & sd(Profit) > 0) %>%
+  summarise(correlation = cor(Income, Profit, use = "complete.obs"))
+
+print(correlation_by_status)
+```
+
+# Conclusion
+
+In conclusion, the analysis shows several interesting insights into customer behavior and responses to marketing campaigns:
+
+- The majority of customers are in the middle-age group, with notable spending patterns on wine and other products.
+- There are clear differences in campaign responses based on income levels and family status.
+- The correlation analysis reveals the relationship between customer income and profit, providing insights into how income influences profitability.
+- The additional segmentation analysis indicates that the relationship between income and profit can vary significantly across different marital statuses, which could help in targeted marketing strategies.
+

@@ -1,0 +1,260 @@
+---
+title: "Final Exam"
+author: "Abdallah chidjou"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output: pdf_document
+---
+
+
+```{r setup, include=FALSE}
+# Install and load the reticulate package
+if (!requireNamespace("reticulate", quietly = TRUE)) {
+  install.packages("reticulate")
+}
+library(reticulate)
+py_install("seaborn")
+```
+
+
+## Question 1
+
+```{python}
+import numpy as np
+import matplotlib.pyplot as plt
+
+# d. Use python, and write a function which takes N = 2000 
+# and generates N observations from the distribution.
+
+def generate_observations(N=2000):
+    # Generate N uniform random variables in [0, 1]
+    U = np.random.uniform(0, 1, N)
+    # Apply the inverse CDF formula to generate X
+    X = (1 / (1 - U)**2) - 1
+    return X
+
+# Generate 2000 observations
+N = 2000
+observations = generate_observations(N)
+
+# Plot the histogram of the generated data
+plt.hist(observations, bins=50, density=True, alpha=0.6, label='Generated Data')
+
+# Define the original PDF function
+def pdf(x):
+    return 1 / (2 * (1 + x)**1.5)
+
+# Generate x values for plotting the PDF
+x_vals = np.linspace(0, 1000, 100)  # Limit x-axis to match the filtered data
+y_vals = pdf(x_vals)
+
+# Plot the PDF on top of the histogram
+plt.plot(x_vals, y_vals, 'r-', linewidth=2, label='PDF f(x)')
+plt.xlabel('x')
+plt.ylabel('Density')
+plt.title('Histogram of Generated Data and PDF')
+plt.legend()
+plt.show()
+
+```
+
+
+## Question 3
+
+```{python}
+# a. Define the quadratic function
+def quadratic_function(a, b, c, x):
+    return a * x**2 + b * x + c
+
+# b. Define the gradient function
+def grad_function(a, b, x):
+    return 2 * a * x + b
+
+# c. Gradient descent for minimizing the quadratic function
+def gradient_descent(a, b, c, learning_rate=0.1, tol=1e-5, max=1000):
+    x = 0  
+    for i in range(max):
+        grad = grad_function(a, b, x)
+        # Check for convergence
+        if abs(grad) < tol:  
+            print(f"Converged after {i} iterations.")
+            return x
+        # Update x using gradient descent  
+        x = x - learning_rate * grad  
+    print("Did not converge within the maximum number of iterations.")
+    return x
+
+# d. Test the program with a=3, b=-12, c=9
+a, b, c = 3, -12, 9
+x_min = gradient_descent(a, b, c)
+print(f"The minimum value occurs at x = {x_min}")
+print(f"The minimum value of f(x) = {quadratic_function(a, b, c, x_min)}")
+
+#  e. Explanation
+# The convergence depends on the learning rate, tolerance, and the problem's characteristics.
+# If the gradient became smaller than `tol`, the optimization converged successfully.
+# If the maximum number of iterations was reached, it suggests either a slow convergence or a poorly chosen learning rate.
+
+```
+
+
+## Question 4
+
+```{r}
+# Load the necessary library
+library(ggplot2)
+
+# Load the dataset 
+dataset <- read.csv("diamonds.csv")
+
+# a. Focus on the diamond observations whose carat is greater 
+# than 0.5 and whose price is less than 5000.
+filtered_data <- subset(dataset, carat > 0.5 & price < 5000)   
+
+head(filtered_data)
+
+```
+
+
+```{r}
+# b. Use ggplot and study the relationship between the two 
+# variables of price and carat from part (a) data. Explain 
+# which graphical display should be used and why.
+ggplot(filtered_data, aes(x = carat, y = price,)) +
+  geom_point() +
+  ggtitle("Price vs Carat (Filtered)") +
+  xlab("Carat") +
+  ylab("Price")
+
+
+# The scatterplot is used here because it effectively shows 
+# the relationship between two continuous variables price and carat.
+```
+
+
+
+```{r}
+# c. Facet the plot by ‘cut‘ so that each facet corresponds 
+# to a diﬀerent diamond cut.
+
+# Facet by cut
+ggplot(filtered_data, aes(x = carat, y = price)) +
+  geom_point() +
+  facet_wrap(~ cut) +
+  ggtitle("Price vs Carat Faceted by Cut") +
+  xlab("Carat") +
+  ylab("Price")
+
+```
+
+
+```{r}
+# d) Color the points by ‘clarity‘. Carefully add the labels 
+# for the x-axis, y-axis, title and legend.
+ggplot(filtered_data, aes(x = carat, y = price, color = clarity)) +
+  geom_point() +
+  facet_wrap(~ cut) +
+  ggtitle("Price vs Carat Faceted by Cut and Colored by Clarity") +
+  xlab("Carat") +
+  ylab("Price") +
+  theme(legend.title = element_text(size = 10))
+
+```
+
+
+## Question 5
+
+```{python}
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# a. Load the dataset as a data frame. Convert the ‘Date‘ 
+# column to a datetime object and extract the year.
+
+data = pd.read_csv('sales.csv')
+data.head()
+
+data['Date'] = pd.to_datetime(data['Date'])
+data['Year'] = data['Date'].dt.year.astype(int)
+
+
+data.head()
+```
+
+
+```{python}
+# b. Group the data by ‘Region‘ and calculate the total sales for each year.
+sales_region = data.groupby(['Region', 'Year'])['Sales'].sum().reset_index()
+sales_region
+```
+
+```{python}
+# c. Create a line plot to show the yearly sales trend for each region. 
+# Then, add appropriate labels for the x-axis and y-axis and a title for the plot.
+plt.figure(figsize=(12, 8))
+regions = sales_region['Region'].unique()
+
+for region in regions:
+    region_data = sales_region[sales_region['Region'] == region]
+    plt.plot(region_data['Year'], region_data['Sales'], label=region)
+
+# Add labels and title
+plt.xlabel('Year')
+plt.ylabel('Total Sales')
+plt.title('Yearly Sales by Region')
+plt.legend(title='Region')
+plt.grid()
+plt.show()
+```
+
+
+
+```{python}
+# d. Highlight the region with the highest total sales across all years in the plot using a thicker line width or a diﬀerent line style.
+
+# Identify the region with the highest total sales
+region_total_sales = sales_region.groupby('Region')['Sales'].sum()
+highest_sales_region = region_total_sales.idxmax()
+
+# Re-plot the sales trend with highlighted region
+plt.figure(figsize=(12, 8))
+
+for region in regions:
+    region_data = sales_region[sales_region['Region'] == region]
+    if region == highest_sales_region:
+        plt.plot(region_data['Year'], region_data['Sales'], label=region, linewidth=3, linestyle='--')
+    else:
+        plt.plot(region_data['Year'], region_data['Sales'], label=region)
+
+# Add labels and title
+plt.xlabel('Year')
+plt.ylabel('Total Sales')
+plt.title('Yearly Sales Region: Highlighted Top Region')
+plt.legend(title='Region')
+plt.grid()
+plt.show()
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

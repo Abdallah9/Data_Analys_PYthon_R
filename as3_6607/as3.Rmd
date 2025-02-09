@@ -1,0 +1,704 @@
+---
+title: "DSCI 6607--  Fall 2024 Assignment 4"
+date: "2024-10-26"
+output: pdf_document
+---
+
+
+```{r}
+# Abdallah Chidjou
+# Citation: (source of help: Lecture note, googling in general, stackoverflow, and chatgpt)
+```
+
+
+## Question 1
+
+```{r}
+# Load mtcars (this is already available in R)
+data(mtcars)
+# View the first few rows of the dataset
+head(mtcars)
+
+# View the structure of the dataset to understand the variable types
+#str(mtcars)
+
+# Get a summary of the dataset
+#summary(mtcars)
+
+# Load the necessary library
+library(ggplot2)
+
+# Create the scatter plot
+ggplot(mtcars, aes(x = hp, y = mpg)) +
+  geom_point(aes(color = factor(cyl), shape = factor(gear)), size = 3) +
+  facet_wrap(~ cyl) +
+  theme_minimal() +
+  labs(title = "Scatter Plot of MPG vs Horsepower, Faceted by Cylinders",
+       x = "Horsepower (hp)",
+       y = "Miles per Gallon (mpg)")
+# a.
+# Each panel represents a subset of cars from the dataset 
+# with the same number of cylinders (cyl = 4, 6, or 8).
+
+# b.
+# geom_point(aes(color = factor(cyl), shape = factor(gear)), size = 3)
+# done in the plot
+
+# c.
+# The variable used for faceting is cyl.
+
+# d.
+# Cars with more cylinders (e.g., 8 cylinders) tend to have lower mpg and higher hp, 
+# indicating they are powerful but less efficient.
+# Cars with fewer cylinders (e.g., 4 cylinders) tend to have higher mpg and lower hp, 
+# indicating they are more fuel-efficient but less powerful.
+
+
+
+```
+
+
+## Question 2
+
+```{r}
+# a1: Parsing and outputting the date
+a1 <- "12/30/14"
+parsed_a1 <- strptime(a1, format = "%m/%d/%y")
+formatted_a1 <- format(parsed_a1, format = "%b %d, %Y")
+print(formatted_a1)  
+
+# a2: Parsing and outputting the date
+a2 <- "07-Jan-2017"
+parsed_a2 <- strptime(a2, format = "%d-%b-%Y")
+formatted_a2 <- format(parsed_a2, format = "%d-%m-%Y")
+print(formatted_a2)  
+
+# Create the original vector of date-time strings
+convert_date_time <- function(date_vector) {
+  # Use sapply to iterate over the vector and parse/format each element
+  formatted_dates <- sapply(date_vector, function(x) {
+    # Parse the original string to a date-time object
+    parsed_date <- strptime(x, format = "%B %d (%Y) - %I:%M%p")
+    # Format the parsed date into the desired format
+    formatted_date <- format(parsed_date, format = "%m/%d/%Y - %I:%M%p")
+    return(formatted_date)
+  })
+  # Return the formatted dates
+  return(formatted_dates)
+}
+# a3: Parsing and outputting the date
+a3 <- c("August 19 (2015) - 3:04PM", "July 1 (2015) - 4:04PM")
+formatted_dates <- convert_date_time(a3)
+# Print the formatted dates
+print(formatted_dates)
+
+
+# a4: Parsing and outputting the date
+a4 <- "January 1, 2010"
+parsed_a4 <- strptime(a4, format = "%B %d, %Y")
+print(parsed_a4)  
+
+# a5: Parsing and outputting the date
+a5 <- "2015-Mar-07"
+parsed_a5 <- strptime(a5, format = "%Y-%b-%d")
+print(parsed_a5) 
+
+
+
+```
+## Question 3
+
+```{r}
+
+# Install and load the required libraries
+# install.packages(c("dplyr", "ggrepel"))
+library(dplyr)
+library(ggplot2)
+library(ggrepel)
+
+# Load the dataset (assuming you have the CSV file named "largest_cities.csv")
+cities <- read.csv("largest_cities.csv")
+
+
+# a. Create a new column `city_density`
+cities <- cities %>%
+  mutate(city_density = city_pop / city_area)
+head(cities)
+
+# b. Select name, city_pop, city_area, and city_density columns
+selected_data <- cities %>%
+  select(name, city_pop, city_area, city_density)
+
+# Display the selected data
+# print(selected_data)
+
+# c. Modify city_density by multiplying by 1000
+cities <- cities %>%
+  mutate(city_density = city_density * 1000)
+
+# Update the `selected_data` after modifying city_density
+selected_data <- cities %>%
+  select(name, city_pop, city_area, city_density)
+
+# Display the updated selected data
+print(selected_data)
+
+# d. Calculate the average city density by continent
+average_density <- cities %>%
+  # Group by continent
+  group_by(continent) %>%                                    
+  # Calculate average, handling NA values
+  summarise(average_city_density = mean(city_density, na.rm = TRUE))  
+
+# Print the result
+print(average_density)
+
+# e. Calculate metro_density if not already available
+cities <- cities %>%
+  mutate(metro_density = metro_pop / metro_area)
+
+# Filter out rows with missing or zero values for city_density or metro_density to avoid issues with log scales
+filtered_cities <- cities %>%
+  filter(!is.na(city_density), !is.na(metro_density), city_density > 0, metro_density > 0)
+
+# Create the plot
+ggplot(filtered_cities, aes(x = city_density, y = metro_density, label = name)) +
+  geom_point(alpha = 0.7) +
+  geom_text_repel(size = 3, alpha = 0.7) +
+  scale_x_log10() +
+  scale_y_log10() +
+  theme_minimal() +
+  labs(title = "City Density vs Metro Density (Log Scale)",
+       x = "City Density (per 1000 sq km, log scale)",
+       y = "Metro Density (per sq km, log scale)")
+
+
+```
+
+## Question 4
+
+```{r}
+
+# Load the dataset
+economist_data <- read.csv("EconomistData.csv")
+
+# a. Create a scatter plot with the appropriate columns
+ggplot(economist_data, aes(x = Percent.of.15plus.with.bank.account, y = SEDA.Current.level)) +
+  geom_point() +
+  theme_minimal() +
+  labs(title = "Scatter Plot of Bank Account Ownership vs SEDA Score",
+       x = "Percent of People (15+) with Bank Account",
+       y = "SEDA Current Level")
+
+```
+
+
+```{r}
+# b. Color all points blue.
+ggplot(economist_data, aes(x = Percent.of.15plus.with.bank.account, y = SEDA.Current.level)) +
+  geom_point(color = "blue") +
+  theme_minimal() +
+  labs(title = "Scatter Plot of Bank Account Ownership vs SEDA Score",
+       x = "Percent of People (15+) with Bank Account",
+       y = "SEDA Current Level")
+```
+
+
+```{r}
+ # c. Color points according to the Region variable.
+ggplot(economist_data, aes(x = Percent.of.15plus.with.bank.account, y = SEDA.Current.level, color = Region)) +
+  geom_point() +
+  theme_minimal() +
+  labs(title = "Scatter Plot of Bank Account Ownership vs SEDA Score",
+       x = "Percent of People (15+) with Bank Account",
+       y = "SEDA Current Level")
+```
+
+
+```{r}
+# d. Overlay a ﬁtted smoothing trend on top of the scatter plot.
+ggplot(economist_data, aes(x = Percent.of.15plus.with.bank.account, y = SEDA.Current.level, color = Region)) +
+  geom_point() +
+  # Adding a fitted smoothing trend with low span
+  geom_smooth(span = 0.3, method = "loess", se = FALSE) +  
+  theme_minimal() +
+  labs(title = "Scatter Plot with Fitted Smoothing Trend (Low Span)",
+       x = "Percent of People (15+) with Bank Account",
+       y = "SEDA Current Level")
+```
+
+
+```{r}
+# e. Create a scatter plot with a regression line overlaid
+ggplot(economist_data, aes(x = Percent.of.15plus.with.bank.account, y = SEDA.Current.level, color = Region)) +
+  geom_point() +
+  # Overlay a regression line (method = "lm" for linear regression)
+  geom_smooth(method = "lm", se = FALSE) +  
+  theme_minimal() +
+  labs(title = "Scatter Plot with Regression Line",
+       x = "Percent of People (15+) with Bank Account",
+       y = "SEDA Current Level")
+```
+
+
+```{r}
+# f. Create a scatter plot with a regression line and facet it by Region
+ggplot(economist_data, aes(x = Percent.of.15plus.with.bank.account, y = SEDA.Current.level, color = Region)) +
+  geom_point() +
+  # Overlay a regression line (method = "lm" for linear regression)
+  geom_smooth(method = "lm", se = FALSE) + 
+  # Facet the plot by Region
+  facet_wrap(~ Region) +  
+  theme_minimal() +
+  labs(title = "Scatter Plot of Bank Account Ownership vs SEDA Score Faceted by Region",
+       x = "Percent of People (15+) with Bank Account",
+       y = "SEDA Current Level")
+```
+
+## Question 5
+
+```{r}
+
+# Load the ggplot2 library
+library(ggplot2)
+# Load the mtcars dataset
+data(mtcars)
+
+
+# a. Convert the `hp` (horsepower) variable into a factor with three levels: "Low", "Medium", "High"
+mtcars$hp_level <- cut(mtcars$hp,
+                       breaks = c(-Inf, 100, 200, Inf),
+                       labels = c("Low", "Medium", "High"))
+
+# b. Create the scatter plot of `mpg` vs `wt`, faceted by the new `hp_level` factor
+ggplot(mtcars, aes(x = wt, y = mpg)) +
+  geom_point() +
+  facet_wrap(~ hp_level) +
+  theme_minimal() +
+  labs(title = "Scatter Plot of MPG vs Weight, Faceted by Horsepower Level",
+       x = "Weight (1000 lbs)",
+       y = "Miles per Gallon (mpg)")
+# c. How does converting hp into categorical groups enhance the interpretability of the plot?
+
+# Converting hp into categories (Low, Medium, High) allows for easier comparison 
+# between groups rather than interpreting individual values across a continuous scale.
+
+# d. Describe the diﬀerences observed in mpg for diﬀerent hp levels.
+
+# Vehicles in the "Low" horsepower category tend to have higher mpg values, 
+# indicating they are more fuel-efficient.
+
+# Vehicles with "Medium" horsepower have a moderate mpg value, 
+# showing a balance between power and efficiency
+
+# Vehicles in the "High" horsepower group generally have lower mpg, 
+# indicating less fuel efficiency due to their higher power requirements.
+
+# e. What function is used to create categorical levels from continuous variables?
+
+# The cut() function is used to create categorical levels from continuous variables.
+# It allows you to specify breakpoints and labels, making it easy to transform numeric 
+# data into discrete categories.
+
+# f. Can faceting by grouped levels provide more insight than using 
+# hp as a continuous variable on the x-axis?
+
+# It reduces the complexity by breaking the data into simpler, comparable segments.
+# helps in focusing on trends within specific categories rather than analyzing each 
+# individual data point along a continuous scale.
+
+
+
+```
+
+
+## Question 6
+
+```{r}
+# Load libraries
+library(dplyr)
+
+# Load the dataset from the given URL
+url <- "https://raw.githubusercontent.com/Juanets/movie-stats/master/movies.csv"
+movies <- read.csv(url)
+
+# a. Find a subset of the movies produced after 2005
+movies.sub <- movies %>%
+  filter(year > 2005)
+
+# Display first few rows of the subset
+head(movies.sub)
+
+# b. Keep only the specified columns in `movies.sub`
+movies.sub <- movies.sub %>%
+  select(name, director, year, country, genre, budget, gross, score)
+
+# Display first few rows of the modified subset
+head(movies.sub)
+
+# c. Calculate the profit for each movie in `movies.sub` as a fraction of its budget
+movies.sub <- movies.sub %>%
+  mutate(
+    # Convert `budget` to million dollars and round to 1 decimal place
+    budget = round(budget / 1e6, 1), 
+    # Convert `gross` to million dollars and round to 1 decimal place
+    gross = round(gross / 1e6, 1),    
+    # Calculate profit as a fraction of the budget
+    profit_fraction = (gross - budget) / budget  
+  )
+
+# Display first few rows with profit calculation
+head(movies.sub)
+
+# d. Count the number of movies produced by each genre and order them in descending order
+genre_count <- movies.sub %>%
+  group_by(genre) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
+
+# Display the genre count
+print(genre_count)
+
+
+# e. Group the `movies.sub` dataset by `country` and `genre`, then calculate the required metrics
+movies_grouped <- movies.sub %>%
+  group_by(country, genre) %>%
+  summarise(
+    # Count the number of movies in each group
+    count = n(),  
+    # Median of profit as a fraction of budget
+    median_profit_fraction = median(profit_fraction, na.rm = TRUE), 
+    # Mean of the movie score
+    mean_score = mean(score, na.rm = TRUE),  
+    # Variance of the movie score
+    variance_score = var(score, na.rm = TRUE),
+    # Drop the grouping after summarizing
+    .groups = "drop"
+  ) %>%
+  # Arrange by count in descending order
+  arrange(desc(count))
+
+# Display the result
+print(movies_grouped)
+
+```
+
+## Question 7
+
+```{r}
+# library(dplyr)
+movies_filtered <- movies %>%
+  # Filter movies produced after 2001
+  filter(year > 2001) %>%
+  # Calculate the number of movies for each director and 
+  # filter out those with fewer than 4 movies
+  group_by(director) %>%
+  filter(n() >= 4) %>%
+  ungroup() %>%
+  # Group by genre and director, then calculate the mean score for each director
+  group_by(genre, director) %>%
+  summarise(mean_score = mean(score, na.rm = TRUE), .groups = "drop") %>%
+  ungroup() %>%
+  # Step 4: For each genre, select the top two directors with the highest mean scores
+  group_by(genre) %>%
+  top_n(n = 2, wt = mean_score) %>%
+  # Arrange by genre and descending mean score for clarity
+  arrange(genre, desc(mean_score)) %>%  
+  ungroup()
+  .groups = "drop"
+
+# Display the result
+print(movies_filtered)
+
+```
+
+## Question 8
+
+The continuous random variable \( X \) has the following probability density function (PDF), for some positive constant \( c \):
+
+\[
+f(x) = \frac{3}{(1+x)^3}, \quad 0 \leq x \leq c
+\]
+
+To determine the constant \( c \) such that \( f(x) \) is a legitimate PDF, we need to ensure that the total area under the curve of \( f(x) \) over the given domain is equal to 1.
+
+## Step 1: Set Up the Integral
+
+To find the value of \( c \):
+
+\[
+\int_0^c f(x) \, dx = 1
+\]
+
+Substituting \( f(x) \):
+
+\[
+\int_0^c \frac{3}{(1+x)^3} \, dx = 1
+\]
+
+## Step 2: Solve the Integral
+
+To evaluate this integral, we use substitution. Let:
+
+\[
+u = 1 + x, \quad \text{then } du = dx
+\]
+
+Rewrite the limits in terms of \( u \):
+
+- When \( x = 0 \), \( u = 1 \)
+- When \( x = c \), \( u = 1 + c \)
+
+The integral becomes:
+
+\[
+\int_1^{1+c} \frac{3}{u^3} \, du
+\]
+
+Now, evaluate the antiderivative:
+
+\[
+\int \frac{3}{u^3} \, du = 3 \int u^{-3} \, du = 3 \cdot \left( \frac{u^{-2}}{-2} \right) = -\frac{3}{2} u^{-2}
+\]
+
+## Step 3: Substitute the Limits
+
+Evaluate the definite integral from \( u = 1 \) to \( u = 1 + c \):
+
+\[
+\left[ -\frac{3}{2} \cdot \frac{1}{u^2} \right]_1^{1+c} = -\frac{3}{2(1+c)^2} + \frac{3}{2}
+\]
+
+Simplify:
+
+\[
+\frac{3}{2} - \frac{3}{2(1+c)^2} = 1
+\]
+
+## Step 4: Solve for \( c \)
+
+To find \( c \):
+
+1. Move the constant to the other side:
+
+\[
+\frac{3}{2} - 1 = \frac{3}{2(1+c)^2}
+\]
+
+\[
+\frac{1}{2} = \frac{3}{2(1+c)^2}
+\]
+
+2. Cross multiply to solve for \( (1+c)^2 \):
+
+\[
+1 \cdot 2(1+c)^2 = 2 \cdot 3
+\]
+
+\[
+2(1+c)^2 = 6
+\]
+
+3. Divide both sides by 2:
+
+\[
+(1+c)^2 = 3
+\]
+
+4. Take the square root of both sides:
+
+\[
+1+c = \sqrt{3}
+\]
+
+5. Solve for \( c \):
+
+\[
+c = \sqrt{3} - 1
+\]
+
+## Conclusion
+
+The value of \( c \) that makes \( f(x) \) a legitimate PDF is:
+
+\[
+c = \sqrt{3} - 1
+\]
+
+Now that we have the value of \( c \), we can plot the PDF in R:
+
+```{r}
+# (b)
+# Define the value of c
+c <- sqrt(3) - 1
+
+# Define the PDF function
+f <- function(x) {
+  3 / (1 + x)^3
+}
+
+# Define the range for plotting
+x_vals <- seq(0, c, length.out = 1000)
+
+# Calculate the y-values for each x
+y_vals <- f(x_vals)
+
+# Plot the PDF
+plot(x_vals, y_vals, type = "l", col = "blue", lwd = 2,
+     main = "Probability Density Function of X",
+     xlab = "x", ylab = "f(x)")
+
+
+```
+
+## (c) The Expected Value \( E(X) \)
+
+The expected value \( E(X) \) is defined as:
+
+\[
+E(X) = \int_0^c x \cdot f(x) \, dx = \int_0^c x \cdot \frac{3}{(1+x)^3} \, dx
+\]
+
+### Step 2.1: Set Up and Simplify the Integral
+
+Substituting the value of \( f(x) \):
+
+\[
+E(X) = \int_0^c \frac{3x}{(1+x)^3} \, dx
+\]
+
+We use substitution again:
+
+- Let \( u = 1 + x \), then \( du = dx \), and \( x = u - 1 \).
+- When \( x = 0 \), \( u = 1 \).
+- When \( x = c \), \( u = 1 + c \).
+
+The integral becomes:
+
+\[
+E(X) = \int_1^{1+c} \frac{3(u - 1)}{u^3} \, du = 3 \int_1^{1+c} \left( \frac{u - 1}{u^3} \right) \, du
+\]
+
+Expanding:
+
+\[
+E(X) = 3 \int_1^{1+c} \left( \frac{1}{u^2} - \frac{1}{u^3} \right) \, du
+\]
+
+### Step 2.2: Integrate Each Term
+
+Integrate each term:
+
+\[
+\int u^{-2} \, du = -\frac{1}{u}
+\]
+
+\[
+\int u^{-3} \, du = -\frac{1}{2u^2}
+\]
+
+Evaluating the definite integral:
+
+\[
+E(X) = 3 \left( \left[ -\frac{1}{u} \right]_1^{1+c} - \left[ -\frac{1}{2u^2} \right]_1^{1+c} \right)
+\]
+
+Substituting the limits:
+
+1. **For \( -\frac{1}{u} \)**:
+
+\[
+\left[ -\frac{1}{u} \right]_1^{1+c} = -\frac{1}{1+c} + \frac{1}{1} = 1 - \frac{1}{1+c}
+\]
+
+2. **For \( -\frac{1}{2u^2} \)**:
+
+\[
+\left[ -\frac{1}{2u^2} \right]_1^{1+c} = -\frac{1}{2(1+c)^2} + \frac{1}{2}
+\]
+
+Putting it all together:
+
+\[
+E(X) = 3 \left( 1 - \frac{1}{1+c} + \frac{1}{2} - \frac{1}{2(1+c)^2} \right)
+\]
+
+### Step 2.3: Substitute \( c = \sqrt{3} - 1 \)
+
+Substituting \( c = \sqrt{3} - 1 \):
+
+1. \( 1 + c = \sqrt{3} \)
+
+\[
+E(X) = 3 \left( 1 + \frac{1}{2} - \frac{1}{\sqrt{3}} - \frac{1}{2(\sqrt{3})^2} \right)
+\]
+
+Simplify:
+
+- \( 1 + \frac{1}{2} = \frac{3}{2} \)
+- \( \frac{1}{2(\sqrt{3})^2} = \frac{1}{6} \)
+
+Combining:
+
+\[
+E(X) = 3 \left( \frac{3}{2} - \frac{1}{\sqrt{3}} - \frac{1}{6} \right)
+\]
+
+Common denominator for \( \frac{3}{2} \) and \( \frac{1}{6} \):
+
+\[
+\frac{3}{2} - \frac{1}{6} = \frac{8}{6} = \frac{4}{3}
+\]
+
+So:
+
+\[
+E(X) = 3 \left( \frac{4}{3} - \frac{1}{\sqrt{3}} \right)
+\]
+
+Multiply by 3:
+
+\[
+E(X) = 4 - \frac{3}{\sqrt{3}}
+\]
+
+Simplify:
+
+\[
+E(X) = 4 - \sqrt{3}
+\]
+
+### Final Answer
+
+The expected value \( E(X) \) is:
+
+\[
+E(X) = 4 - \sqrt{3}
+\]
+
+\[
+E(X) = 2.26
+\]
+
+```{r}
+
+#(d) Define the function for the cumulative distribution (inverse transformation method)
+
+func_inv <- function(u) {
+  (2 * (1 - u))^(-1/2) - 1
+}
+
+# Simulate 1000 random observations
+set.seed(123)  # Set a seed for reproducibility
+u_vals <- runif(1000)
+simulated_data <- func_inv(u_vals)
+
+# (e) Estimate mean and variance
+estimated_mean <- mean(simulated_data)
+estimated_variance <- var(simulated_data)
+
+# Print the results
+cat("Estimated Mean:", estimated_mean, "\n")
+cat("Estimated Variance:", estimated_variance, "\n")
+
+```

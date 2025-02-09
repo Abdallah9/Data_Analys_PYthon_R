@@ -1,0 +1,173 @@
+---
+title: "DSCI 6607--  Fall 2024"
+author: "Assignment 1^[This content is protected and may not be shared, uploaded, or distributed without written permission from Dr. Armin Hatefi.]"
+output:
+  pdf_document: default
+---
+
+
+## Question 1 
+
+Write a python script which simulates tossing an unfair coin where the probability of head is 0.63. Toss the coin 301 times and compute 
+
+$$ {\widehat p} = \frac{\text{Number of Heads}}{\text{Total number of trials}} $$
+Explain your solution. ${\bf [10~ points]}$
+
+***
+
+
+## Question 2 
+
+We would like to learn an introduction to Bisection root finding method in python. The bisection method finds the root of the function $f(x)$ in interval $[a,b]$ when there is a unique root in the interval and $f(a)>0$ and $f(b) <0$.   
+The method is computed the root iteratively by 
+
+- Compute $m = \frac{a+b}{2}$,
+
+- then $a$ is replaced by $m$ if $f(m)>0$, otherwise $b$ is replaced by $m$ if $f(m)<0$. Then the method computes the mean of the new points and search for the root. Th method iteratively takes the above steps until it finds the root of the function. 
+
+\begin{itemize}
+
+\item[a)] Write a python function which takes $a,b, f$ and computes the root of the $f$ function using the bisection method. The method stops when $|f(m)| < 10^{-5}$. 
+
+\item[b)] Apply your python function from part (a) and find the root of $f(x) = x^3 - 4 x^2 - 3$ in interval $[-2,0]$. Explain your solutions.  ${\bf [10~ points]}$
+
+\end{itemize}
+
+***
+
+
+## Question 3
+
+Central Limit Theorem emphasizes that the sample mean convergences  to 
+population mean as the sample size $n$ is  large enough. 
+
+\begin{itemize}
+\item[a)] Write an R function which takes sample ${\bf x}$ and plots the cumulative 
+sample means. Note that the cumulative means are given by a vector of size $n$ including:
+the mean of the first observation,
+the mean of the first two observations, .... and finally the mean of the $n$ observations. 
+\item[b)] Generate $n=1000$ observations with replacement from `rivers` data set.
+\item[c)] Apply your function from part (a) to the data of part (b). 
+\item[d)] Show the population mean  (the mean of the `rivers` data set) in your plot in part (c). 
+What do you observe in your plot? Can you intuitively argue how many samples one requires for the convergence of the sample mean? If needed, increase the sample size $n$. Explain your solutions.  ${\bf [10~ points]}$
+\end{itemize}
+
+```{r,eval=FALSE}
+# library(datasets)
+
+head(rivers)
+```
+
+***
+
+## Question 4
+
+The `airquality` data set reports the daily air quality measurements 
+in New York, May to September 1973. The data set includes 153 observations and 6 variables.${\bf [10~ points]}$
+
+
+```{r eval=FALSE}
+# library(datasets)
+
+head(airquality)
+```
+
+\begin{itemize}
+
+\item[a)] In Ridge regression analysis, the coefficients of the regression model
+
+\begin{align}\label{reg}
+y=  \beta_1 x_1 + \ldots + \beta_p x_p,
+\end{align}
+ 
+ are estimated by
+ 
+\begin{align}\label{ls}
+ \widehat{\bf \beta}_R =  \left( {\bf X}^\top {\bf X} - \lambda I \right)^{-1}  
+ {\bf X}^\top {\bf y}
+\end{align}
+
+where ${\bf X}$ is $n\times p$ design matrix (i.e., $n$ observations 
+with $p$ columns) and ${\bf y}$ is the response vector of size $n$, $\lambda$ is the Ridge parameter and $I$ is the identity matrix of size $p \times p$.
+
+
+
+\item[b)] Let `Ozone` be the response variable and design matrix includes 
+`Solar.R, Wind, Temp` variables where $p=3$. First normalize all the variables including 
+the explanatory variables and response variable. The normalized version of  variable $x$ is computed by
+
+$$
+z_x = \frac{x-{\bar x}}{\sigma_x},
+$$
+where ${\bar x}$ and $\sigma_x$ denote the mean and standard deviation of  $x$, respectively. 
+
+\item[c)] Write an R  script that computes $\widehat{\bf \beta}_R$ of the model as described by \eqref{ls} for a given $\lambda=0.1$. Hint:  You have to estimate them via the matrix computation. 
+
+\item[d)]  Consider the response and three explanatory variables from part (a). Display the box plot   of the variables separately. Then explain which measure (mean vs median) should be used to describe the center of the 
+variables.  Explain your solutions. 
+
+
+\end{itemize}
+
+
+***
+
+## Question 5
+
+In this question, we plan to learn an introduction to finding the optimum tuning regularization terms.
+Consider the estimation of the coefficients of the regression in Question 4. ${\bf [10~ points]}$
+
+\begin{itemize}
+\item[a)] Take a sample of size 100 observations from the `airquality` data set. Consider this data set henceforth your population. Similar to Question 4, consider the `Ozone` as your response and  your design matrix includes 
+`Solar.R, Wind, Temp` variables. Divide the population into 2 folds. The training data of size 70 and testing data of size 30. Note that the folds are mutually exclusive such that  there is no common observation between them. 
+
+\item[b)]  Use the training  fold to estimate the coefficients of the regression from \eqref{ls} and obtain 
+${\widehat \beta}_R$. Then predict the response value of test data by
+
+$$
+{\widehat y} =  {\widehat \beta}_R x_{new}
+$$
+where $x_{new}$ is the covariates  of the test fold ${\widehat y}$ denotes the predicted  responses of the test fold.  Finally compute 
+
+$$
+\sqrt{\text{MSE}} = \sqrt{\sum_{i=1}^{30} (y_{i,test}-{\widehat y}_{i,test})^2/100}
+$$
+\item[c)] Now write a function which uses the above function and computes the root MSEs for 100 equally spaced selected points for $\lambda \in [-2,2]$. Find the $\lambda$ which gives the minimum root MSE? Explain your solutions. 
+
+
+\end{itemize}
+
+
+***
+
+## Question 6 
+
+We would like to learn an introduction to Box-Muller transformation. The Box-Muller method simulates data form standard normal distribution from random numbers between $[0,1]$. 
+
+Let $u_1$ and $u_2$ are two numbers generated randomly between $[0,1]$, then $x$ and $y$ as
+
+\[
+x = \sqrt{-2*\log(u_1)} \cos(2 \pi u_2),
+\]
+\[
+y = \sqrt{-2*\log(u_1)} \sin(2 \pi u_2)
+\]
+
+follow from standard normal distribution. 
+
+
+\begin{itemize}
+
+\item[a)] Write a python function which takes $u_1, u_2$ and simulates $x$ and $y$.
+
+\item[b)] Apply your python function from part (a) and generates 1000 observations from standard normal distribution. 
+
+\item[c)] Plot the histogram of the generated observations form part (b). Compare the histogram with histogram of the true observations from standard normal distribution. Explain your solutions.  ${\bf [10~ points]}$
+
+\end{itemize}
+
+***
+
+**Due on Friday, October 11, by 3 pm**
+
+**Have fun!**
